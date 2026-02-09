@@ -5,7 +5,7 @@ public class Main{
         Integer[] numbers = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
         int[] simpleNumbers = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
-        SortingAlgorithms.bogoSort(numbers);
+        SortingAlgorithms.mergeSort(numbers);
         System.out.println(Arrays.toString(numbers));
 
         SortingAlgorithms.insertionSort(simpleNumbers);

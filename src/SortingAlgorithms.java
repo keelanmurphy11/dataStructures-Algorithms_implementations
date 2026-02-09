@@ -1,7 +1,89 @@
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Random;
 
 public class SortingAlgorithms {
 
+//-------------------------------------Merge Sort-------------------------------------//
+//Implementation with focus of maximising efficiency:
+    public static <E extends Comparable<E>> void mergeSort(E[] array) {
+        if  (array.length <= 1) return;
+
+//Create an auxiliary array just once, this will save costly operations of constantly creating new arrays
+        //Reflection used here as generics don't support new E[] directly.
+        @SuppressWarnings("unchecked")
+        E[] aux = (E[]) Array.newInstance(array.getClass().getComponentType(), array.length);
+
+        mergeSortHelper(array, aux, 0, array.length - 1);
+    }
+
+    private static <E extends Comparable<E>> void mergeSortHelper(E[] array, E[] aux, int low, int high){
+        if (high <= low) return; //if array length = 1
+
+        int mid = low +(high - low)/2; //calculate midpoint of given range
+
+        mergeSortHelper(array, aux, low, mid);
+        mergeSortHelper(array, aux, mid+1, high);
+
+        if (array[mid].compareTo(array[mid+1]) <= 0){ //If the largest item in left is <= smallest in right skip merge
+            return;
+        }else{
+            System.arraycopy (array, low, aux, low, high-low+1); //Copy range we're working on
+
+            int i = low;      // pointer for left side
+            int j = mid + 1;  // pointer for right side
+            int k = low;      // pointer for merged array
+
+            // 1. Compare while both sides have elements
+            while (i <= mid && j <= high) {
+                if (aux[i].compareTo(aux[j]) <= 0) {
+                    array[k++] = aux[i++];
+                } else {
+                    array[k++] = aux[j++];
+                }
+            }
+
+            // 2. Copy remaining elements from the left side
+            // Note: We don't need to copy the right side because if any are left,
+            // they are already in the correct position in the main array.
+            while (i <= mid) {
+                array[k++] = aux[i++];
+            }
+        }
+    }
+
+
+
+    //Simple Implementation
+    public static <E extends Comparable<E>> void mergeSortSimple(E[] array) {
+        int inLength = array.length;
+        if  (inLength <= 1) {
+            return;
+        }
+
+        int mid =  inLength / 2;
+        E[] left = Arrays.copyOfRange(array, 0, mid);
+        E[] right = Arrays.copyOfRange(array, mid, inLength);
+        mergeSort(left);
+        mergeSort(right);
+
+        //Merging arrays:
+        int l = 0, r = 0, i = 0;
+        int rightLength = right.length;
+        int leftLength = left.length;
+
+        while(i < array.length){
+            if(l != leftLength && (r == rightLength || left[l].compareTo(right[r]) <= 0)){ //use <= merge sort is supposed to be stable
+                array[i++] = left[l++];
+            }else{
+                array[i++] = right[r++];
+            }
+        }
+    }
+
+
+
+//-------------------------------------Bubble Sort-------------------------------------//
     public static <E extends Comparable<E>> void bubbleSort(E[] array){
 
         boolean swapped;
@@ -21,7 +103,7 @@ public class SortingAlgorithms {
             if (!swapped) break;
         }
     }
-
+//-------------------------------------Insertion Sort-------------------------------------//
     public static <E extends Comparable<E>> void insertionSort(E[] array){
         //start at index 1 as the first element has already sorted itself
         for(int i = 1; i < array.length; i++){
@@ -48,7 +130,7 @@ public class SortingAlgorithms {
         }
     }
 
-
+//-------------------------------------Selection Sort-------------------------------------//
     public static <E extends Comparable<E>> void selectionSort(E[] array){
         if (array == null || array.length < 2) {
             return;
@@ -70,7 +152,7 @@ public class SortingAlgorithms {
 
 
 
-    //Bogo Sort:
+//-------------------------------------Bogo Sort-------------------------------------//
     public static <E extends Comparable<E>> void bogoSort(E[] array){
         while(!isSorted(array)){
             shuffle(array);
