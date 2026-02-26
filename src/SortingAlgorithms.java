@@ -1,11 +1,59 @@
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class SortingAlgorithms {
 
+
+
+//-------------------------------------Quick Sort-------------------------------------//
+    public static <E extends Comparable <E>> void quickSort(E[] array){ //Don't have to put in indexs in initial call
+        quickSort(array, 0, array.length - 1);
+    }
+
+    public static <E extends Comparable <E>> void quickSort(E[] array, int low_index, int high_index){
+        //Optimization: Use Insertion Sort for small arrays
+        if (low_index + 15 > high_index) {
+            insertionSort(array);
+            return;
+        }
+
+        //Pivot selection: median of three
+        int pivotIndex = low_index + (high_index - low_index) / 2;
+        if (array[low_index].compareTo(array[pivotIndex]) > 0) swap(array, low_index, pivotIndex);
+        if (array[low_index].compareTo(array[high_index]) > 0) swap(array, low_index, high_index);
+        if (array[pivotIndex].compareTo(array[high_index]) > 0) swap(array, pivotIndex, high_index);
+
+        E pivotValue = array[pivotIndex];
+
+        int lp = low_index; //left and right pointers
+        int rp = high_index - 1;
+
+        swap(array, pivotIndex, high_index); //pivot is now the rightmost element
+
+        while (lp < rp) {
+            while (lp < rp && array[lp].compareTo(pivotValue) <= 0) {
+                lp++;
+            }
+            while (rp > lp && array[rp].compareTo(pivotValue) >= 0) {
+                rp--;
+            }
+            if (lp == rp) {
+                swap(array, lp, high_index); //Swap pivot from rightmost position to its sorted position
+            } else {
+                swap(array, lp, rp);
+            }
+        }
+
+        quickSort(array, low_index, lp-1);
+        quickSort(array, lp+1, high_index);
+    }
+
+
 //-------------------------------------Merge Sort-------------------------------------//
-//Implementation with focus of maximising efficiency:
+//**--------Implementation with focus of maximising efficiency--------**//
     public static <E extends Comparable<E>> void mergeSort(E[] array) {
         if  (array.length <= 1) return;
 
@@ -54,7 +102,7 @@ public class SortingAlgorithms {
 
 
 
-    //Simple Implementation
+//**-----Implementation with focus of maximising efficiency-----**//
     public static <E extends Comparable<E>> void mergeSortSimple(E[] array) {
         int inLength = array.length;
         if  (inLength <= 1) {
@@ -81,6 +129,145 @@ public class SortingAlgorithms {
         }
     }
 
+//**--------Bottom up merge sort--------**//
+    //Less overhead from recursion
+    //No chance of a stack overflow
+    //Doesn't change the fundamental time or space complexity, only reduces overhead
+
+    public static <E extends Comparable<E>> void bottomUpMergeSort(E[] array){
+        if (array == null || array.length < 2) return;
+
+        int n =  array.length;
+
+        Object[] aux = new Object[n];
+
+        //size of subarrays to be merged: 1, 2, 4, 8, 16, ...
+        for (int size = 1; size < n; size *= 2){
+            for (int leftStart = 0; leftStart < n - size; leftStart += 2*size) {
+                int mid = leftStart + size -1;
+                int rightEnd = Math.min(leftStart + 2*size - 1, n-1); //Math.min incase it overflows the end of the array
+
+                bottomUpMerge(array, aux, leftStart, mid, rightEnd);
+            }
+        }
+    }
+
+    private static <E extends Comparable<E>> void bottomUpMerge(E[] array, Object[] aux, int low, int mid, int high) {
+        //copy range to aux array
+        for (int k = low; k < high; k++){
+            aux[k] = array[k];
+        }
+
+        E[] auxE = Arrays.copyOfRange(array, 0, aux.length);
+
+        //merge back into original array
+        int i = low; //pointer to the left half
+        int j = mid + 1; //pointer to right half
+
+        for(int k = low; k <= high; k++){
+            if (i > mid){
+                array[k] = auxE[j++]; //left half is exhausted, fill remainder
+            } else if (j > high){
+                array[k] = auxE[i++]; //right half is exhausted
+            }  else if (auxE[i].compareTo(auxE[j]) <= 0){ //compare elements and appropriately merge
+                array[k] = auxE[i++];
+            } else  {
+                array[k] = auxE[j++];
+            }
+
+        }
+    }
+
+
+    //-------------------------------------Shell Sort-------------------------------------//
+    public static <E extends Comparable<E>> void shellSort(E[] array){
+        int n =  array.length;
+        for (int gap = n / 2; gap > 0; gap /= 2){
+            for (int i = gap; i < n; i++){
+                E temp = array[i];
+                int j;
+
+                // Shift earlier gap-sorted elements up until the correct
+                // location for arr[i] is found
+                for (j = i; j >= gap && array[j - gap].compareTo(temp) > 0; j -= gap) {
+                    array[j] = array[j - gap];
+                }
+
+                // Put temp (the original arr[i]) in its correct location
+                array[j] = temp;
+            }
+        }
+    }
+
+
+
+//-------------------------------Bucket Sort--------------------------------//
+    public static void bucketSortDec(int[] array, int exp){
+        int n = array.length;
+
+        List<Integer>[] buckets = new ArrayList[10];
+        for (int i = 0; i < n; i++){
+            buckets[i] = new ArrayList<>();
+        }
+
+        //scatter into buckets
+        for (int i = 0; i < n; i++){
+            int bucketIndex = (array[i] /exp) % 10;
+            buckets[bucketIndex].add(array[i]);
+        }
+
+        //Gather
+        int j = 0;
+        for (int i = 0; i < 10; i++){
+            for (Integer value : buckets[i]){
+                array[j++] = value;
+            }
+        }
+    }
+
+
+
+//-------------------------------Counting Sort--------------------------------//
+    public static void countingSort(int[] array){
+        if  (array == null || array.length < 2) return;
+        int n =  array.length;
+
+        //Find max in array, determine range
+        int max = array[0];
+        for(int i = 1; i < n; i++){
+            if (array[i] > max) max = array[i];
+        }
+
+        //make count array
+        int[] count = new int[max+1];
+
+        //Count occurrences of each
+        for (int i = 0; i < n; i++){
+            count[array[i]]++;
+        }
+
+        //update count list to store index pos
+        for (int i = 1; i <= max; i++){
+            count[i] = count[i]+count[i-1];
+        }
+
+        //Build output array
+        int[] output = new int[n];
+        //start backwards to maintain stability (order of equal elements)
+        for (int i = n-1; i >= 0; i--){
+            output[count[array[i]]-1] = array[i]; //say i = 2, take arrays 3rd element, say 5, count[5] hold the index position+1 of where the 5 should go
+            count[array[i]]--;
+        }
+
+        //copy back to array
+        for (int i = 0; i < n; i++){
+            array[i] = output[i];
+        }
+    }
+
+
+
+
 
 
 //-------------------------------------Bubble Sort-------------------------------------//
@@ -104,12 +291,26 @@ public class SortingAlgorithms {
         }
     }
 //-------------------------------------Insertion Sort-------------------------------------//
+
     public static <E extends Comparable<E>> void insertionSort(E[] array){
         //start at index 1 as the first element has already sorted itself
         for(int i = 1; i < array.length; i++){
             E temp = array[i]; //The element we are currently positioning
             int j = i-1;
             while(j >= 0 && temp.compareTo(array[j]) < 0 ){
+                array[j+1] = array[j]; //shift to the right
+                j--;
+            }
+            array[j+1] = temp;
+        }
+    }
+
+//Insertion sort for part of a list, used in quick sort.
+    public static <E extends Comparable<E>> void insertionSort(E[] array, int low_index, int high_index){
+        for(int i = low_index+1; i < high_index+1; i++){
+            E temp = array[i]; //The element we are currently positioning
+            int j = i-1;
+            while(j >= low_index && temp.compareTo(array[j]) < 0 ){
                 array[j+1] = array[j]; //shift to the right
                 j--;
             }
@@ -159,7 +360,7 @@ public class SortingAlgorithms {
         }
     }
 
-    private static <E extends Comparable<E>> boolean isSorted(E[] array){
+    static <E extends Comparable<E>> boolean isSorted(E[] array){
         for (int i = 0; i < array.length - 1; i++){
             if (array[i].compareTo(array[i+1]) > 0){
                 return false;
@@ -177,6 +378,17 @@ public class SortingAlgorithms {
             array[i] = array[randomIndex];
             array[randomIndex] = temp;
         }
+    }
+
+
+
+
+
+    //-------------------------------------General Helper Functions-------------------------------------//
+    public static <E extends Comparable <E>>void swap (E[] array, int index1, int index2){
+        E temp = array[index1];
+        array[index1] = array[index2];
+        array[index2] = temp;
     }
 }
 
