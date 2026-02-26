@@ -12,7 +12,7 @@ public class SearchingAlgorithms {
         }
 
         int mid = low + (high-low)/2; //Better to calc this way, avoid chance of int overflow
-        int cmp = comparator.compare(array[mid], elem;
+        int cmp = comparator.compare(array[mid], elem);
 
         //base case
         if (cmp == 0){
@@ -25,4 +25,30 @@ public class SearchingAlgorithms {
             return binarySearchHelper(array, elem, mid + 1, high, comparator);
         }
     }
+
+
+    public static <T> int binarySearchIterative(final T[] array, final T elem, final Comparator<T> comparator) {
+        int low = 0;
+        int high = array.length - 1;
+
+        while (low <= high) {
+            // Safe midpoint calculation
+            int mid = low + (high - low) / 2;
+            int cmp = comparator.compare(array[mid], elem);
+
+            if (cmp == 0) {
+                return mid; // Found it!
+            } else if (cmp < 0) {
+                // array[mid] is smaller than elem, search the right half
+                low = mid + 1;
+            } else {
+                // array[mid] is larger than elem, search the left half
+                high = mid - 1;
+            }
+        }
+
+        // If the loop finishes, the element wasn't in the array
+        return -1;
+    }
 }
+
